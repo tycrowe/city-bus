@@ -10,26 +10,30 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 
 public class CityBus extends Actor {
 
+    public enum BUS_ACTION {
+        INTERCEPT,
+        PASSIVE_DRIVEBY
+    }
+
     private Texture cityBusTexture;
-    private Vector2 position;
     private Polygon collisionBox;
     private float busSpeed = 10f;
+    private BUS_ACTION action;
+    private Vector2 busCenter;
 
-    public CityBus(String name, Texture cityBusTexture, float x, float y) {
-        setName(name);
+    public CityBus(String name, Texture cityBusTexture, float x, float y, BUS_ACTION action) {
         this.cityBusTexture = cityBusTexture;
+        setName(name);
         setSize(cityBusTexture.getWidth(), cityBusTexture.getHeight());
         setPosition(x, y);
-        this.position = new Vector2(getX(), getY());
-        collisionBox = new Polygon(new float[] {
+        this.collisionBox = new Polygon(new float[] {
                 getX(), getY(),
                 getX() + getWidth(), getY(),
                 getX() + getWidth(), getY() + getHeight(),
                 getX(), getY() + getHeight()
         });
-        collisionBox.setOrigin(getX() + getWidth() / 2, getY() + getHeight() / 2);
-        collisionBox.rotate(90);
-        setRotation(90);
+        this.busCenter = new Vector2(getX() + getWidth() / 2, getY() + getHeight() / 2);
+        this.action = action;
     }
 
     @Override
@@ -50,18 +54,42 @@ public class CityBus extends Actor {
     public void drawDebug(ShapeRenderer shapes) {
         shapes.setColor(Color.RED);
         shapes.polygon(collisionBox.getTransformedVertices());
+
     }
 
     @Override
     public void act(float delta) {
-        // SPEED UP FOOL
-        setX(getX() - busSpeed);
-        setBounds(getX(), getY(), getWidth(), getHeight());
+        switch (action) {
+            case INTERCEPT:
+                // SPEED UP FOOL
+                setX(getX() - busSpeed);
+                break;
+            case PASSIVE_DRIVEBY:
+                break;
+        }
+        collisionBox.setPosition(getX(), getY());
         setOrigin(getWidth() / 2, getHeight() / 2);
     }
 
-    public Vector2 getBusCenter() {
-        return new Vector2(getX() + getWidth() / 2, getY() + getHeight() / 2);
+    @Override
+    public void rotateBy(float amountInDegrees) {
+        super.rotateBy(amountInDegrees);
+        collisionBox.rotate(amountInDegrees);
     }
 
+    public Vector2 getPosition(Vector2 vector2) {
+        return vector2.set(getX(), getY());
+    }
+
+    public Vector2 getCenter() {
+        return busCenter;
+    }
+
+    public Polygon getBounds() {
+        return collisionBox;
+    }
+
+    public BUS_ACTION getAction() {
+        return action;
+    }
 }

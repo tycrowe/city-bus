@@ -4,16 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 
 public class PlayerCar extends Actor {
 
     private Texture playerCarTexture;
-    private Rectangle box;
+    private Polygon collisionBox;
     private float carSpeed = 2f;
     private Vector2 position;
     private Vector2 carCenter;
@@ -22,30 +20,28 @@ public class PlayerCar extends Actor {
         this.playerCarTexture = playerCarTexture;
         this.setName(name);
         setSize(playerCarTexture.getWidth(), playerCarTexture.getHeight());
-        this.addListener(new InputListener() {
-            @Override
-            public boolean keyDown(InputEvent event, int keycode) {
-                return false;
-            }
-
-            @Override
-            public boolean keyUp(InputEvent event, int keycode) {
-                return false;
-            }
-
-            @Override
-            public boolean keyTyped(InputEvent event, char character) {
-                return false;
-            }
-        });
         this.position = new Vector2(getX(), getY());
-        this.box = new Rectangle(getX(), getY(), getWidth(), getHeight());
+        this.collisionBox = new Polygon(new float[] {
+                getX(), getY(),
+                getX() + getWidth(), getY(),
+                getX() + getWidth(), getY() + getHeight(),
+                getX(), getY() + getHeight()
+        });
         this.carCenter = new Vector2(getX() + getWidth() / 2, getY() + getHeight() / 2);
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        batch.draw(playerCarTexture, getX(), getY());
+        batch.draw(
+                playerCarTexture,
+                getX(), getY(),
+                getOriginX(), getOriginY(),
+                getWidth(), getHeight(),
+                getScaleX(), getScaleY(),
+                getRotation(),
+                0, 0, (int) getWidth(), (int) getHeight(),
+                true, false
+        );
     }
 
     @Override
@@ -55,25 +51,29 @@ public class PlayerCar extends Actor {
         if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             setY((getY() + (carSpeed + 1.5f)));
         }
-        box.set(getX(), getY(), getWidth(), getHeight());
         carCenter.x = getX() + getWidth() / 2;
         carCenter.y = getY() + getHeight() / 2;
     }
 
-    public Vector2 getPosition() {
-        return position;
+    @Override
+    public void rotateBy(float amountInDegrees) {
+        super.rotateBy(amountInDegrees);
+        collisionBox.rotate(amountInDegrees);
     }
 
-    public float getCarSpeed() {
-        return carSpeed;
+    public Vector2 getPosition(Vector2 vector2) {
+        return vector2.set(getX(), getY());
     }
 
-    public Rectangle getBox() {
-        return box;
-    }
-
-    public Vector2 getCarCenter() {
+    public Vector2 getCenter() {
         return carCenter;
     }
 
+    public Polygon getBounds() {
+        return collisionBox;
+    }
+
+    public float getSpeed() {
+        return carSpeed;
+    }
 }
